@@ -25,3 +25,11 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+    App\Service\PayPalClient:
+        arguments:
+            $accessToken: '%env(PAYPAL_ACCESS_TOKEN)%'
+            $baseUrl: '%env(PAYPAL_BASE_URL)%'
+    App\Service\ClickMeetingRestClient:
+        arguments:
+            $apiKey: '%env(CLICKMEETING_API_KEY)%'
+            $format: 'json'

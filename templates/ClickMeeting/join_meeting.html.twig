@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+   {% if form %}
+      {{ form_start(form) }}
+      {{ form_end(form) }}
+   {% else %}
+      <div style="display: flex; align-content: center; vertical-align: center">PŁATNOŚC NIE ZOSTAŁA ZREALIZOWANA</div>
+      <div><a href="{{ path('app_payment_form') }}"> PRZEJDŹ DO ZAPISÓW NA WEBINAR</a></div>
+   {% endif %}
+{% endblock %}
