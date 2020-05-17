@@ -16,36 +16,31 @@ class MeetingController extends AbstractController
     /**
      * @Route("/", name="app_payment_form")
      */
-    public function paymentForm(Request $request, PayPalClient $payPalClient)
+    public function renderPaymentForm(Request $request, PayPalClient $payPalClient)
     {
         $form = $this->createForm(PayPalPaymentForm::class, new PayPalPayment());
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
-            $urlToApprove = $payPalClient->initPayment();
+            $urlToApprove = $payPalClient->initPayment($form->getData());
             return $this->redirect($urlToApprove);
         }
-        return $this->render('PayPal\paypal_form.html.twig', ['form' => $form->createView()]);
+        return $this->render('Register/register_form.html.twig', ['form' => $form->createView()]);
     }
 
     /**
-     * @Route("/payment-success", name="app_payment_success")
+     * @Route("/payment-status", name="app_payment_status")
      */
-    public function successfulPayemnt(
-        Request $request,
-        PayPalClient $payPalClient,
-        ClickMeetingRestClient $clickMeetingRestClient
-    ) {
-        $paymentId = $request->get('paymentId');
-        $payerId = $request->get('PayerID');
-
-        $form = null;
-        if ($payPalClient->checkPayment($paymentId, $payerId)) {
+    public function getPaymentStatus(PayPalClient $payPalClient, ClickMeetingRestClient $clickMeetingRestClient)
+    {
+        if ($payPalClient->checkPayment()) {
             $urlHash = $clickMeetingRestClient->getConferenceLink();
-            $form = $this->createForm(JoinMeetingForm::class, [], ['action' => $urlHash]);
-            return $this->render('ClickMeeting/join_meeting.html.twig', ['form' => $form->createView()]);
+            if($urlHash){
+                $form = $this->createForm(JoinMeetingForm::class, [], ['action' => $urlHash]);
+                return $this->render('ClickMeeting/join_meeting_form.html.twig', ['form' => $form->createView()]);
+            }
         }
 
-        return $this->render('ClickMeeting/join_meeting.html.twig', ['form' => null]);
+        return $this->render('ClickMeeting/join_meeting_form.html.twig', ['form' => null]);
     }
 
 }

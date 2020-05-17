@@ -102,6 +102,12 @@
     "ocramius/proxy-manager": {
         "version": "2.7.1"
     },
+    "paypal/paypal-checkout-sdk": {
+        "version": "1.0.1"
+    },
+    "paypal/paypalhttp": {
+        "version": "1.0.0"
+    },
     "php": {
         "version": "7.4"
     },

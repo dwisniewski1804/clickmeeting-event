@@ -4,8 +4,10 @@
 namespace App\Service;
 
 
+use App\Model\PaymentInterface;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -15,44 +17,87 @@ class PayPalClient
     private string $baseUrl;
     private string $accessToken;
     private string $returnUrl;
+    private SessionInterface $session;
+    private RequestStack $requestStack;
 
+    /**
+     * PayPalClient constructor.
+     * @param RequestStack $requestStack
+     * @param RouterInterface $router
+     * @param SessionInterface $session
+     * @param string $baseUrl
+     * @param string $accessToken
+     */
     public function __construct(
         RequestStack $requestStack,
         RouterInterface $router,
+        SessionInterface $session,
         string $baseUrl,
         string $accessToken
     ) {
         $this->baseUrl = $baseUrl;
         $this->accessToken = $accessToken;
-        $this->returnUrl = $router->generate('app_payment_success', [], UrlGeneratorInterface::ABSOLUTE_URL);
+        $this->requestStack = $requestStack;
+        $this->session = $session;
+        $this->returnUrl = $router->generate('app_payment_status', [], UrlGeneratorInterface::ABSOLUTE_URL);
     }
 
-    public function initPayment(): string
+    /**
+     * @param PaymentInterface $payment
+     * @return string
+     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     */
+    public function initPayment(PaymentInterface $payment): string
     {
+        $this->session->set('payment', $payment);
         return $this->makePaymentCall();
     }
 
-    public function checkPayment(string $paymentId, string $payerId): bool
+    /**
+     * @return bool
+     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     */
+    public function checkPayment(): bool
     {
-        $body = ['payer_id' => $payerId];
-        $client = HttpClient::create();
-        $response = $client->request('POST', $this->baseUrl . '/v1/payments/payment/' . $paymentId . '/execute', [
-            'headers' => [
-                'Content-Type' => "application/json"
-            ],
-            'auth_bearer' => $this->accessToken,
-            'body' => '{"payer_id": "xxx" }',
-        ]);
+        if($this->requestStack->getCurrentRequest())
+        {
+            $paymentId = $this->requestStack->getCurrentRequest()->get('paymentId');
+            $payerId = $this->requestStack->getCurrentRequest()->get('PayerID');
+            $body = ['payer_id' => $payerId];
+            $client = HttpClient::create();
+            $response = $client->request('POST', $this->baseUrl . '/v1/payments/payment/' . $paymentId . '/execute', [
+                'headers' => [
+                    'Content-Type' => 'application/json'
+                ],
+                'auth_bearer' => $this->accessToken,
+                'body' => $body
+            ]);
 
-        return json_decode($response->getContent(), true)['state'] === 'approved';
+            return json_decode($response->getContent(), true)['state'] === 'approved';
+        }
+
+        return false;
     }
 
+    /**
+     * @return string
+     * @throws \Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface
+     * @throws \Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface
+     */
     private function makePaymentCall(): string
     {
         $client = HttpClient::create();
         $response = $client->request('POST', $this->baseUrl . '/v1/payments/payment', [
             'headers' => [
-                'Content-Type' => "application/json"
+                'Content-Type' => 'application/json'
             ],
             'auth_bearer' => $this->accessToken,
             'body' => '{
@@ -73,7 +118,7 @@ class PayPalClient
                     "insurance": "0.01"
                   }
                 },
-                "description": "This is the payment transaction description.",
+                "description": "",
                 "custom": "EBAY_EMS_90048630024435",
                 "invoice_number": "48787589673",
                 "payment_options": {
@@ -112,7 +157,7 @@ class PayPalClient
               }],
               "note_to_payer": "Contact us for any questions on your order.",
               "redirect_urls": {
-                    "return_url": "' . $this->returnUrl . '",
+                "return_url": "' . $this->returnUrl . '",
                 "cancel_url": "https://example.com"
               }
             }'

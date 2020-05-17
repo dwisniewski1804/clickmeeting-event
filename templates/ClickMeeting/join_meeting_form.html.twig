@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+    {% if form %}
+        <div class="form-container">
+            <h3>PŁATNOŚĆ PRZEBIEGŁA POMYŚLNIE</h3>
+            {{ form_start(form) }}
+            {{ form_end(form) }}
+        </div>
+    {% else %}
+        <div class="form-container" style="background: white">
+            <div class="payment-incomplete">PŁATNOŚC NIE ZOSTAŁA ZREALIZOWANA</div>
+            <a href="{{ path('app_payment_form') }}"><button type="submit">Przejdź do rejestracji</button></a>
+            {% set currentPath = path(app.request.attributes.get('_route'),
+                app.request.attributes.get('_route_params')) %}
+            <div class="goto-registration"><a onclick="window.location.reload()">Odśwież aby sprawdzić status</a></div>
+        </div>
+    {% endif %}
+{% endblock %}
