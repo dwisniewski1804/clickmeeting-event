@@ -1,6 +1,6 @@
 # CLICKMEETING APPLICATION #
 This is paypal payment and clickmeeting conference test application.
-It requires **PHP ^7.4**. You DO NOT need any database. It works on Session service.
+It requires **[Composer](composer.org)** and **PHP ^7.4**. You DO NOT need any database. It works on Session service.
 
 1. Copy `.env` file as `.env.local` 
 2. Fill env variables values: </br>
