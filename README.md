@@ -11,7 +11,7 @@ It requires **[Composer](http://getcomposer.org)** and **PHP ^7.4**. You DO NOT 
         PAYPAL_BASE_URL=https://api.sandbox.paypal.com
         
         ### CLICKMEETING ###
-        CLICKMEETING_API_KEY=apiKey</br>
+        CLICKMEETING_API_KEY=apiKey
         CLICKMEETING_BASE_URL=https://api.clickmeeting.com/v1/
 
 3. Install symfony CLI from here https://symfony.com/download
