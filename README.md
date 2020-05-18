@@ -3,18 +3,18 @@ This is paypal payment and clickmeeting conference test application.
 It requires **PHP ^7.4**.
 
 1. Copy `.env` file as `.env.local` 
-2. Add env variables values: </br>
+2. Fill env variables values: </br>
 
         ### PAYPAL ###
-        PAYPAL_CLIENT_ID=clientID </br>
-        PAYPAL_CLIENT_SECRET=clientSecret </br>
-        PAYPAL_BASE_URL=https://api.sandbox.paypal.com </br>
+        PAYPAL_CLIENT_ID=clientID 
+        PAYPAL_CLIENT_SECRET=clientSecret
+        PAYPAL_BASE_URL=https://api.sandbox.paypal.com
         
         ### CLICKMEETING ###
         CLICKMEETING_API_KEY=apiKey</br>
-        CLICKMEETING_BASE_URL='https://api.clickmeeting.com/v1/' </br>
+        CLICKMEETING_BASE_URL=https://api.clickmeeting.com/v1/
 
-3. Install symfony CLI from here https://symfony.com/download </br>
+3. Install symfony CLI from here https://symfony.com/download
 
 4. Run `composer install` </br>
 
