@@ -2,8 +2,8 @@
 
 namespace App\Service;
 
+use App\Model\PaymentInterface;
 use Exception;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
  * ClickMeeting REST client
@@ -12,9 +12,9 @@ class ClickMeetingRestClient
 {
 
     /**
-     * @var SessionInterface
+     * @var PaymentInterface
      */
-    private SessionInterface $session;
+    private ?PaymentInterface $sessionPayment;
 
     /**
      * API url
@@ -69,14 +69,14 @@ class ClickMeetingRestClient
      * @param array $params
      * @throws Exception
      */
-    public function __construct(SessionInterface $session, string $apiKey, string $format)
+    public function __construct(PayPalClient $payPalClient, string $apiKey, string $format)
     {
         if (false === extension_loaded('curl'))
         {
             throw new Exception('The curl extension must be loaded for using this class!');
         }
 
-        $this->session = $session;
+        $this->sessionPayment = $payPalClient->getSessionPayment();
         $this->api_key = $apiKey ?? $this->api_key;
         $this->format = $format && in_array(strtolower($format), $this->formats, true) ? strtolower($format) : $this->format;
     }
@@ -96,7 +96,7 @@ class ClickMeetingRestClient
             'access_type' => 3,
             'registration' => array(
                 'template' => 1,
-                'enabled' => true
+                'enabled' => false
             ),
             'settings' => array(
                 'show_on_personal_page' => 1,
@@ -112,11 +112,10 @@ class ClickMeetingRestClient
         );
         $room = $this->addConference($params);
         $room = json_decode($room)->room;
-        $sessionPayment =  $this->session->get('payment');
 
         $params = array(
-            'email' => $sessionPayment->getEmail(), // email address
-            'nickname' => $sessionPayment->getEmail(), // user nickname
+            'email' => $this->sessionPayment->getEmail(), // email address
+            'nickname' => $this->sessionPayment->getEmail(), // user nickname
             'role' => 'listener', // user role, other: presenter, host
         );
 
@@ -128,6 +127,28 @@ class ClickMeetingRestClient
 
         return $room->room_url. '?I='.$room->autologin_hash;
     }
+
+    /**
+     * @param array $params
+     * @return array|string
+     * @throws Exception
+     */
+    public function addConference(array $params)
+    {
+        return $this->sendRequest('POST', 'conferences', $params);
+    }
+
+    /**
+     * @param $room_id
+     * @param array $params
+     * @return array|string
+     * @throws Exception
+     */
+    public function conferenceAutologinHash($room_id, array $params)
+    {
+        return $this->sendRequest('POST', 'conferences/'.$room_id.'/room/autologin_hash', $params);
+    }
+
 
     /**
      * Get response
@@ -215,26 +236,4 @@ class ClickMeetingRestClient
         }
         return $response;
     }
-
-    /**
-     * @param array $params
-     * @return array|string
-     * @throws Exception
-     */
-    public function addConference(array $params)
-    {
-        return $this->sendRequest('POST', 'conferences', $params);
-    }
-
-    /**
-     * @param $room_id
-     * @param array $params
-     * @return array|string
-     * @throws Exception
-     */
-    public function conferenceAutologinHash($room_id, array $params)
-    {
-        return $this->sendRequest('POST', 'conferences/'.$room_id.'/room/autologin_hash', $params);
-    }
-
 }
