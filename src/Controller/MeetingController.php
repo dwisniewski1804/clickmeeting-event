@@ -9,12 +9,13 @@ use App\Service\ClickMeetingRestClient;
 use App\Service\PayPalClient;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class MeetingController extends AbstractController
 {
     /**
-     * @Route("/", name="app_payment_form")
+     * @Route("/", name="app_register_form")
      */
     public function renderPaymentForm(Request $request, PayPalClient $payPalClient)
     {
@@ -43,4 +44,11 @@ class MeetingController extends AbstractController
         return $this->render('ClickMeeting/join_meeting_form.html.twig', ['form' => null]);
     }
 
+    /**
+     * @Route("/payment-cancel", name="app_payment_cancel")
+     */
+    public function cancelPayment()
+    {
+        return $this->render('Payment/payment_cancel.html.twig');
+    }
 }

@@ -27,7 +27,8 @@ services:
     # please note that last definitions always *replace* previous ones
     App\Service\PayPalClient:
         arguments:
-            $accessToken: '%env(PAYPAL_ACCESS_TOKEN)%'
+            $clientId: '%env(PAYPAL_CLIENT_ID)%'
+            $clientSecret: '%env(PAYPAL_CLIENT_SECRET)%'
             $baseUrl: '%env(PAYPAL_BASE_URL)%'
     App\Service\ClickMeetingRestClient:
         arguments:
