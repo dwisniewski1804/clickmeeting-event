@@ -12,27 +12,24 @@ class ClickMeetingRestClient
 {
 
     /**
-     * @var PaymentInterface
+     * Session interface to fetch user's data on join meeting action.
      */
     private ?PaymentInterface $sessionPayment;
 
     /**
      * API url
-     * @var string
      */
-    protected $url = 'https://api.clickmeeting.com/v1/';
+    protected string $url;
 
     /**
      * API key
-     * @var string
      */
-    protected $api_key = null;
+    protected string $api_key;
 
     /**
      * Format
-     * @var string
      */
-    protected $format = null; // json, xml, printr, js
+    protected string $format;
 
     /**
      * Curl options
@@ -69,13 +66,14 @@ class ClickMeetingRestClient
      * @param array $params
      * @throws Exception
      */
-    public function __construct(PayPalClient $payPalClient, string $apiKey, string $format)
+    public function __construct(PayPalClient $payPalClient, string $baseUrl, string $apiKey, string $format)
     {
         if (false === extension_loaded('curl'))
         {
             throw new Exception('The curl extension must be loaded for using this class!');
         }
 
+        $this->url = $baseUrl;
         $this->sessionPayment = $payPalClient->getSessionPayment();
         $this->api_key = $apiKey ?? $this->api_key;
         $this->format = $format && in_array(strtolower($format), $this->formats, true) ? strtolower($format) : $this->format;
@@ -87,37 +85,22 @@ class ClickMeetingRestClient
      */
     public function getConferenceLink(){
         // here should be some real data
-        $params = array(
+        $params = [
             'lobby_enabled' => true,
-            'lobby_description' => 'My meeting',
-            'name' => 'test_room',
+            'lobby_description' => 'Webinar Damian Wiśniewski',
+            'name' => 'Pokój testowy',
             'room_type' => 'meeting',
             'permanent_room' => 0,
-            'access_type' => 3,
-            'registration' => array(
-                'template' => 1,
-                'enabled' => false
-            ),
-            'settings' => array(
-                'show_on_personal_page' => 1,
-                'thank_you_emails_enabled' => 1,
-                'connection_tester_enabled' => 1,
-                'phonegateway_enabled' => 1,
-                'recorder_autostart_enabled' => 1,
-                'room_invite_button_enabled' => 1,
-                'social_media_sharing_enabled' => 1,
-                'connection_status_enabled' => 1,
-                'thank_you_page_url' => 'http://example.com/thank_you.html',
-            ),
-        );
+            'access_type' => 1,
+        ];
         $room = $this->addConference($params);
         $room = json_decode($room)->room;
 
-        $params = array(
-            'email' => $this->sessionPayment->getEmail(), // email address
-            'nickname' => $this->sessionPayment->getEmail(), // user nickname
-            'role' => 'listener', // user role, other: presenter, host
-        );
+        $params = [
+            'email' => $this->sessionPayment->getEmail(),
+            'nickname' => $this->sessionPayment->getNickName(),
+            'role' => 'listener',
+        ];
 
         try {
             $hash = $this->conferenceAutologinHash($room->id, $params);
@@ -125,7 +108,7 @@ class ClickMeetingRestClient
             return false;
         }
 
-        return $room->room_url. '?I='.$room->autologin_hash;
+        return $room->room_url. '?l='.$room->autologin_hash;
     }
 
     /**
@@ -148,7 +131,6 @@ class ClickMeetingRestClient
     {
         return $this->sendRequest('POST', 'conferences/'.$room_id.'/room/autologin_hash', $params);
     }
-
 
     /**
      * Get response

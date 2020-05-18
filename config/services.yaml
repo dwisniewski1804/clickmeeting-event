@@ -33,4 +33,5 @@ services:
     App\Service\ClickMeetingRestClient:
         arguments:
             $apiKey: '%env(CLICKMEETING_API_KEY)%'
+            $baseUrl: '%env(CLICKMEETING_BASE_URL)%'
             $format: 'json'
